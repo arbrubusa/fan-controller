@@ -1,0 +1,134 @@
+[
+    {
+        "id": "flow_influx_http",
+        "type": "tab",
+        "label": "InfluxDB via HTTP",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "mqtt_all_data_http",
+        "type": "mqtt in",
+        "z": "flow_influx_http",
+        "name": "All Fan Data",
+        "topic": "+/+/+",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "mqtt_broker",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 120,
+        "y": 160,
+        "wires": [
+            [
+                "format_line_protocol"
+            ]
+        ]
+    },
+    {
+        "id": "format_line_protocol",
+        "type": "function",
+        "z": "flow_influx_http",
+        "name": "Format Line Protocol",
+        "func": "// Parse topic\nconst parts = msg.topic.split('/');\nconst type = parts[0];     // temp, fans\nconst location = parts[1]; // inlet, outlet\nconst metric = parts[2] || 'value'; // rpm, duty, ou 'value' para temp\n\n// Convert to number\nconst value = parseFloat(msg.payload);\n\n// Validate value\nif (isNaN(value)) {\n    node.warn(`Invalid value: ${msg.payload} for topic: ${msg.topic}`);\n    return null;\n}\n\n// Create field name\nlet fieldName;\nif (type === 'temp') {\n    fieldName = 'temperature';\n} else if (type === 'fans' && metric === 'rpm') {\n    fieldName = 'rpm';\n} else if (type === 'fans' && metric === 'duty') {\n    fieldName = 'duty';\n} else {\n    fieldName = 'value';\n}\n\n// InfluxDB Line Protocol format\nconst lineProtocol = `fan_monitoring,type=${type},location=${location},metric=${metric} ${fieldName}=${value} ${Date.now()}000000`;\n\n// Debug log\nnode.log(`Topic: ${msg.topic} → Line: ${lineProtocol}`);\n\nmsg.payload = lineProtocol;\nmsg.headers = {\n    'Authorization': 'Token admintoken',\n    'Content-Type': 'text/plain; charset=utf-8'\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 160,
+        "wires": [
+            [
+                "http_influx",
+                "d00d27e5325514ab"
+            ]
+        ]
+    },
+    {
+        "id": "http_influx",
+        "type": "http request",
+        "z": "flow_influx_http",
+        "name": "POST to InfluxDB",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://influxdb:8086/api/v2/write?org=myorg&bucket=iot&precision=ns",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 830,
+        "y": 160,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d00d27e5325514ab",
+        "type": "debug",
+        "z": "flow_influx_http",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 700,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "mqtt_temp_data",
+        "type": "mqtt in",
+        "z": "flow_influx_http",
+        "name": "Temperature Data",
+        "topic": "temp/+",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "mqtt_broker",
+        "inputs": 0,
+        "x": 130,
+        "y": 260,
+        "wires": [
+            [
+                "debug_temp",
+                "format_line_protocol"
+            ]
+        ]
+    },
+    {
+        "id": "debug_temp",
+        "type": "debug",
+        "z": "flow_influx_http",
+        "name": "Debug Temp",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 350,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "mqtt_broker",
+        "type": "mqtt-broker",
+        "name": "Mosquitto",
+        "broker": "mosquitto",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true
+    }
+]
