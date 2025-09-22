@@ -23,3 +23,6 @@ tree .
 └── data
 ```
 
+Place the mosquitto.conf file in ~/mosquitto/config
+
+Keep in mind this is still a very basic setup. There's a lot of room to improve.
