@@ -25,6 +25,6 @@ tree .
 
 Place the mosquitto.conf file in ~/mosquitto/config
 
-The Nodered config, you can just copy it and paste and paste it in Nodered, using the Import option and then clicking on deploy.
+The Nodered config, you can just copy and paste it in Node-Red, using the Import option and then clicking on deploy.
 
 Keep in mind this is still a very basic setup. There's a lot of room to improve.
