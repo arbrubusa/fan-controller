@@ -66,10 +66,10 @@ void reconnectMQTT() {
     Serial.println("Tentando reconectar MQTT...");
     if (client.connect("ESP32-fan")) {
       client.subscribe("config/fan/curve");
-      Serial.println("✅ MQTT reconectado!");
+      Serial.println("MQTT reconectado!");
       lastMqtt = millis(); // atualiza timestamp
     } else {
-      Serial.printf("❌ Falha na reconexão MQTT (rc=%d)\n", client.state());
+      Serial.printf("Falha na reconexão MQTT (rc=%d)\n", client.state());
     }
   }
 }
@@ -180,7 +180,7 @@ void loop() {
     
     // Tenta reconectar a cada 60 segundos
     if (millis() - lastReconnectAttempt >= reconnectInterval) {
-      Serial.println("🔄 Tentando reconectar MQTT (failsafe ativo)...");
+      Serial.println("Tentando reconectar MQTT (failsafe ativo)...");
       reconnectMQTT();
       lastReconnectAttempt = millis();
     }
@@ -188,7 +188,7 @@ void loop() {
   } else {
     // MQTT está OK - sair do failsafe se estava ativo
     if (failsafe_active) {
-      Serial.println("✅ SAINDO DO FAILSAFE: MQTT reconectado");
+      Serial.println("SAINDO DO FAILSAFE: MQTT reconectado");
       Serial.printf("DEBUG: t_in=%.1f, temp_low_up=%.1f, temp_high_up=%.1f\n", t_in, temp_low_up, temp_high_up);
       
       failsafe_active = false;
@@ -210,7 +210,7 @@ void loop() {
       }
       
       temp_change_time = millis();
-      Serial.printf("✅ Nova meta após failsafe: target=%d%%, current=%d%% (aplicado imediatamente)\n", target_duty, current_duty);
+      Serial.printf("Nova meta após failsafe: target=%d%%, current=%d%% (aplicado imediatamente)\n", target_duty, current_duty);
     }
   }
 
@@ -227,9 +227,9 @@ void loop() {
 
     // Se passou 30 segundos com o mesmo target, aplica a mudança
     if (target_duty != current_duty && (millis() - temp_change_time >= CHANGE_DELAY)) {
-      Serial.printf("⏰ 30s passados! Mudando de %d%% para %d%%\n", current_duty, target_duty);
+      Serial.printf("30s passados! Mudando de %d%% para %d%%\n", current_duty, target_duty);
       current_duty = target_duty;
-      Serial.printf("✅ Aplicando mudança: %d%%\n", current_duty);
+      Serial.printf("Aplicando mudança: %d%%\n", current_duty);
     }
   }
   
